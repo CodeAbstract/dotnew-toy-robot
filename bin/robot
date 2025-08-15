@@ -1,0 +1,39 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Ensure we can run this script from any directory
+require 'pathname'
+bin_file = Pathname.new(__FILE__).realpath
+APP_ROOT = Pathname.new File.expand_path('..', bin_file.dirname)
+
+# Add lib to load path
+$LOAD_PATH.unshift(APP_ROOT.join('lib').to_s) unless $LOAD_PATH.include?(APP_ROOT.join('lib').to_s)
+
+require 'optparse'
+require 'robot_simulator'
+
+# Parse command line options
+options = {}
+OptionParser.new do |opts|
+  opts.banner = "Usage: #{File.basename($PROGRAM_NAME)} [options]"
+
+  opts.on('-g', '--grid-size SIZE', Integer,
+          "Set grid size (default: #{RobotSimulator::Config::DEFAULT_GRID_SIZE}, " \
+          "min: #{RobotSimulator::Config::MINIMUM_GRID_SIZE}, " \
+          "max: #{RobotSimulator::Config::MAXIMUM_GRID_SIZE})") do |size|
+    RobotSimulator::Config.grid_size = size
+  end
+
+  opts.on('-h', '--help', 'Show this help message') do
+    puts opts
+    exit
+  end
+end.parse!
+
+begin
+  # Start the robot simulator
+  RobotSimulator::Controller.new.run
+rescue Interrupt
+  puts "\nGoodbye!"
+  exit(0)
+end 
